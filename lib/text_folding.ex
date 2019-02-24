@@ -1,4 +1,5 @@
 defmodule TextFolding do
+  use Memoize
   @limit 6
   # strings => [2, 4, 5, 6]
   # F[]
@@ -7,7 +8,7 @@ defmodule TextFolding do
     # Enum.each(lengths_array, &(IO.inspect line_cost(&1), label: "cost"))
     lengths_array
     |> TextFolding.cost
-    |> IO.inspect(label: "Sum cost")
+    # |> IO.inspect(label: "Sum cost")
   end
 
   # TODO
@@ -44,7 +45,7 @@ defmodule TextFolding do
   end
 
   # Count unnecessary trailing white spaces
-  def line_cost(lengths) do
+  defmemo line_cost(lengths) do
     c = @limit - (Enum.sum(lengths) + Enum.count(lengths) - 1)
     if c < 0 do
       # Return (almost) infinity cost if this exceeds @limit
