@@ -1,6 +1,6 @@
 defmodule TextFolding do
   use Memoize
-  @limit 6
+  @limit 20
   # strings => [2, 4, 5, 6]
   # F[]
   def fold(remaining_words, lengths_array) when length(remaining_words) == 0 do
@@ -39,9 +39,30 @@ defmodule TextFolding do
   # Input: work length array of text
   # Ex: [[10, 10, 9], [10, 18]]
   # Output: cost of the text
-  def cost(lengths_array) do
-    Enum.map(lengths_array, &TextFolding.line_cost/1)
-    |> Enum.sum
+  defmemo cost(lengths_array) do
+    {prev, word, newline} = TextFolding.pop(lengths_array)
+    if newline do
+      cost(prev) + TextFolding.
+    else
+    end
+    c = cost(prev)
+    # Enum.map(lengths_array, &TextFolding.line_cost/1)
+    # |> Enum.sum
+  end
+
+  # Get length array, returns white space array
+  defmemo trailing_spaces(lengths_array) do
+    {prev, word, newline} = TextFolding.pop(lengths_array)
+  end
+
+  def pop(lengths_array) do
+    init = Enum.take(lengths_array, length(lengths_array) -1)
+    last = List.last(lengths_array)
+    if length(last) == 1 do
+      {init, List.first(last), true}
+    else
+      {init ++ [Enum.take(last, length(last) - 1)], List.last(last), false}
+    end
   end
 
   # Count unnecessary trailing white spaces
@@ -81,14 +102,25 @@ end
 #
 # TextFolding.append_same_line([[1], [1]], 1)
 #   |> IO.inspect
-lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+# lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+#
+# lorem = "aa bb cccc asa"
 
+# lorem = "aaa bb cc ddddd"
 # String.split(string, " ")
 #   |> Enum.map(&String.length/1)
 #   |> TextFolding.fold([[]])
 #   |> IO.inspect
   #
-String.split(lorem, " ")
-  |> Enum.map(&String.length/1)
-  |> TextFolding.fold([[]])
+Application.ensure_all_started(:memoize)
+# String.split(lorem, " ")
+#   |> Enum.map(&String.length/1)
+#   |> TextFolding.fold([[]])
+#   |> IO.inspect
+
+TextFolding.pop([[1,2], [1]])
+  |> IO.inspect
+
+
+TextFolding.pop([[1,2], [3, 88, 1]])
   |> IO.inspect
