@@ -1,6 +1,6 @@
 defmodule TextFolding do
   use Memoize
-  @limit 20
+  @limit 6
   # strings => [2, 4, 5, 6]
   # F[]
   def fold(remaining_words, lengths_array) when length(remaining_words) == 0 do
@@ -39,24 +39,48 @@ defmodule TextFolding do
   # Input: work length array of text
   # Ex: [[10, 10, 9], [10, 18]]
   # Output: cost of the text
-  defmemo cost(lengths_array) do
-    {prev, word, newline} = TextFolding.pop(lengths_array)
-    if newline do
-      cost(prev) + TextFolding.
-    else
-    end
-    c = cost(prev)
-    # Enum.map(lengths_array, &TextFolding.line_cost/1)
-    # |> Enum.sum
+  def cost(lengths_array) do
+    trailing_spaces(lengths_array)
+    |> Enum.reduce(0, fn (x, acc) -> :math.pow(x, 3) + acc end)
   end
 
-  # Get length array, returns white space array
+  # Input length array, returns white spaces array
+  def trailing_spaces([[]]) do
+    []
+  end
+
   defmemo trailing_spaces(lengths_array) do
-    {prev, word, newline} = TextFolding.pop(lengths_array)
+    {previous_lengths_array, current, popped_new_line?} = TextFolding.pop(lengths_array)
+    if current >= @limit do
+      [100_000_000]
+    end
+    previous_white_spaces = trailing_spaces(previous_lengths_array)
+
+    if popped_new_line? do
+      previous_white_spaces ++ [@limit - current]
+    else
+      while_spaces_of_last_line = List.last(previous_white_spaces)
+                                  |> (&(&1 - (current + 1))).()
+      if while_spaces_of_last_line < 0 do
+        [100_000_000]
+      else
+        previous_white_spaces
+        |> Enum.drop(-1)
+        |> (fn(x) ->  x ++ [while_spaces_of_last_line] end).()
+      end
+    end
+  end
+
+  def pop([[]]) do
+    raise "Can't pop any more"
+  end
+
+  def pop([[x]]) do
+    {[[]], x, true}
   end
 
   def pop(lengths_array) do
-    init = Enum.take(lengths_array, length(lengths_array) -1)
+    init = Enum.drop(lengths_array, -1)
     last = List.last(lengths_array)
     if length(last) == 1 do
       {init, List.first(last), true}
@@ -106,21 +130,19 @@ end
 #
 # lorem = "aa bb cccc asa"
 
-# lorem = "aaa bb cc ddddd"
-# String.split(string, " ")
-#   |> Enum.map(&String.length/1)
-#   |> TextFolding.fold([[]])
-#   |> IO.inspect
   #
 Application.ensure_all_started(:memoize)
-# String.split(lorem, " ")
-#   |> Enum.map(&String.length/1)
-#   |> TextFolding.fold([[]])
-#   |> IO.inspect
-
-TextFolding.pop([[1,2], [1]])
+IO.inspect "---"
+TextFolding.trailing_spaces([[1,2],[3, 2, 1]])
   |> IO.inspect
 
-
-TextFolding.pop([[1,2], [3, 88, 1]])
+IO.inspect "---"
+TextFolding.cost([[1,2],[3, 2, 1]])
   |> IO.inspect
+
+IO.inspect "lorem"
+# lorem = "aaa bb cc ddddd"
+lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+String.split(lorem, " ")
+  |> Enum.map(&String.length/1)
+  |> TextFolding.fold([[]])
