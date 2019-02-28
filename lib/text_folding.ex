@@ -8,7 +8,7 @@ defmodule TextFolding do
     # Enum.each(lengths_array, &(IO.inspect line_cost(&1), label: "cost"))
     lengths_array
     |> TextFolding.cost
-    # |> IO.inspect(label: "Sum cost")
+    |> IO.inspect(label: "Sum cost")
   end
 
   # TODO
