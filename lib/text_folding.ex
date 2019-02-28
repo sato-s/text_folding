@@ -1,11 +1,7 @@
 defmodule TextFolding do
   use Memoize
   @limit 6
-  # strings => [2, 4, 5, 6]
-  # F[]
   def fold(remaining_words, lengths_array) when length(remaining_words) == 0 do
-    # Enum.each(lengths_array, &(IO.inspect &1, charlists: :as_lists, label: "line"))
-    # Enum.each(lengths_array, &(IO.inspect line_cost(&1), label: "cost"))
     lengths_array
     |> TextFolding.cost
     |> IO.inspect(label: "Sum cost")
