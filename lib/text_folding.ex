@@ -1,12 +1,11 @@
 defmodule TextFolding do
   use Memoize
-  @limit 6
+  @limit 30
   @infinity 100_000_000_000
 
   def fold(string) do
     words = String.split(string, " ")
     lengths = Enum.map(words, &String.length/1)
-              |> IO.inspect
     {cost, foldings} = TextFolding.min_cost(lengths, length(lengths) - 1)
     IO.inspect {cost, foldings}, label: "cost"
 
@@ -21,22 +20,13 @@ defmodule TextFolding do
     end)
   end
 
-  def printline(position, words) do
-    from = List.first position
-    to = List.last position
-    Enum.slice(words, (from..to))
-      |> Enum.join(" ")
-      |> IO.inspect(label: "output:")
-    #
-  end
-
   # Calculate optimized accumulated cost from 0 to n
   def min_cost(lengths, n) when n == 0 do
     # Just return 0 if there's no word
     {TextFolding.line_cost(lengths, 0, 0), []}
   end
 
-  def min_cost(lengths, n) do
+  defmemo min_cost(lengths, n) do
     (0..n)
       # We want to calulate all combination of folding.
       # We fold text at posision x in the bollow function.
@@ -47,10 +37,10 @@ defmodule TextFolding do
           if fold_at == n do
             {TextFolding.line_cost(lengths, 0, n), []}
           else
-            {prev_cost, prev_foldings} = min_cost(lengths, fold_at)
+            {prev_cost, prev_fold_at} = min_cost(lengths, fold_at)
             new_line_cost = TextFolding.line_cost(lengths, fold_at + 1, n)
             cost = prev_cost + new_line_cost
-            foldings = prev_foldings ++ [fold_at]
+            foldings = prev_fold_at ++ [fold_at]
             {cost, foldings}
           end
         end)
@@ -74,21 +64,13 @@ defmodule TextFolding do
     @limit - Enum.at(lengths, from)
   end
 
-  def trailing_white_spaces(lengths, from, to) when from != to do
+  defmemo trailing_white_spaces(lengths, from, to) when from != to do
     trailing_white_spaces(lengths, from, to - 1) - Enum.at(lengths, to) - 1
   end
 end
 
 Application.ensure_all_started(:memoize)
 
-# target = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-
-# target = "aaa bb cc ddddd"
-# target = "aaa dd ddddd"
-target = "aa a a a a a"
-#
+target = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
 
 TextFolding.fold(target)
-# TextFolding.min_cost([1, 2, 1, 4], 3)
-# # TextFolding.min_cost([3, 2, 2, 5], 2)
-#   |> IO.inspect(label: "line cost")
