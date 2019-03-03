@@ -9,15 +9,23 @@ defmodule TextFolding do
     {cost, foldings} = TextFolding.min_cost(lengths, length(lengths) - 1)
     IO.inspect {cost, foldings}, label: "cost"
 
-    Enum.with_index(words)
-    |> Enum.each(fn({word, index}) ->
-      IO.write word
-      if Enum.member?(foldings, index) do
-        IO.write "\n"
-      else
-        IO.write " "
-      end
-    end)
+    # Print folded text
+    Enum.chunk_every([1] ++ foldings ++ [length(words)], 2, 1,:discard)
+      |> Enum.map(fn(x) ->
+        from = List.first(x)
+        to = List.last(x)
+        if from == 1 do
+          Enum.slice(words, (0..to))
+        else
+          Enum.slice(words, (from+1..to))
+        end
+      end)
+      |> Enum.each(fn(words) ->
+        line =  Enum.join(words, " ")
+        len = String.length(line)
+        white_spaces = String.duplicate("␣", 30 - len)
+        IO.puts "#{line}#{white_spaces}(#{len})"
+      end)
   end
 
   # Calculate optimized accumulated cost from 0 to n
