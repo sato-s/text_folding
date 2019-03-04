@@ -23,8 +23,10 @@ defmodule TextWrap do
       |> Enum.each(fn(words) ->
         line =  Enum.join(words, " ")
         len = String.length(line)
-        white_spaces = String.duplicate("␣", 30 - len)
-        IO.puts "#{line}#{white_spaces}(#{len})"
+        # white_spaces = String.duplicate(" ", @limit - len)
+        # IO.puts "#{line}#{white_spaces}(#{len}/#{@limit})"
+        white_spaces = String.duplicate(".", 30 - len)
+        IO.puts "#{line}#{white_spaces}(#{len}/#{@limit})"
       end)
   end
 
@@ -75,10 +77,15 @@ defmodule TextWrap do
   defmemo trailing_white_spaces(lengths, from, to) when from != to do
     trailing_white_spaces(lengths, from, to - 1) - Enum.at(lengths, to) - 1
   end
+
+  def trailing_white_spaces(_, from, to) when from > to do
+    raise "Something is very wrong"
+  end
 end
 
 Application.ensure_all_started(:memoize)
 
+# target = "aaa bb cc dddddd"
 target = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
 
 TextWrap.wrap(target)
