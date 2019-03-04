@@ -72,6 +72,10 @@ defmodule TextFolding do
     @limit - Enum.at(lengths, from)
   end
 
+  def trailing_white_spaces(_, from, to) when from > to do
+    raise "Something is very wrong"
+  end
+
   defmemo trailing_white_spaces(lengths, from, to) when from != to do
     trailing_white_spaces(lengths, from, to - 1) - Enum.at(lengths, to) - 1
   end
