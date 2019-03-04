@@ -6,11 +6,11 @@ defmodule TextWrap do
   def wrap(string) do
     words = String.split(string, " ")
     lengths = Enum.map(words, &String.length/1)
-    {cost, wrap_ats} = TextWrap.min_cost(lengths, length(lengths) - 1)
-    IO.inspect {cost, wrap_ats}, label: "cost"
+    {cost, wraps} = TextWrap.cost(lengths, length(lengths) - 1)
+    IO.inspect {cost, wraps}, label: "cost"
 
     # Print wrapped text
-    Enum.chunk_every([1] ++ wrap_ats ++ [length(words)], 2, 1,:discard)
+    Enum.chunk_every([1] ++ wraps ++ [length(words)], 2, 1,:discard)
       |> Enum.map(fn(x) ->
         from = List.first(x)
         to = List.last(x)
@@ -31,31 +31,24 @@ defmodule TextWrap do
   end
 
   # Calculate optimized accumulated cost from 0 to n
-  def min_cost(lengths, n) when n == 0 do
+  def cost(lengths, n) when n == 0 do
     # Just return 0 if there's no word
     {TextWrap.line_cost(lengths, 0, 0), []}
   end
 
-  defmemo min_cost(lengths, n) do
-    (0..n)
-      # We want to calulate all combination of text wraps.
-      # We wrap text at posision x in the bollow function.
-      # min_cost(lengths, wrap_at) is minimum cost until wrap_at.
-      # line_cost(lengths, wrap_at + 1, n) is a cost of one line after wrap_at
+  defmemo cost(lengths, n) do
+    costs = (0..n-1)
       |> Enum.map(
-        fn(wrap_at) ->
-          if wrap_at == n do
-            {TextWrap.line_cost(lengths, 0, n), []}
-          else
-            {prev_cost, prev_wrap_at} = min_cost(lengths, wrap_at)
-            new_line_cost = TextWrap.line_cost(lengths, wrap_at + 1, n)
-            cost = prev_cost + new_line_cost
-            wrap_ats = prev_wrap_at ++ [wrap_at]
-            {cost, wrap_ats}
-          end
+        fn(wrap) ->
+          {prev_cost, prev_wrap} = cost(lengths, wrap)
+          new_line_cost = TextWrap.line_cost(lengths, wrap + 1, n)
+          cost = prev_cost + new_line_cost
+          wraps = prev_wrap ++ [wrap]
+          {cost, wraps}
         end)
-      # Take minimum cost
-      |> Enum.min_by(fn({cost, _wrap_ats}) -> cost end)
+    one_line_cost = {TextWrap.line_cost(lengths, 0, n), []}
+    [one_line_cost | costs]
+      |> Enum.min_by(fn({cost, _wraps}) -> cost end)
   end
 
   def line_cost(lengths, from, to) do
@@ -78,13 +71,14 @@ defmodule TextWrap do
     raise "Something is very wrong"
   end
 
+  def trailing_white_spaces(_, from, to) when from > to do
+    raise "Something is very wrong"
+  end
+
   defmemo trailing_white_spaces(lengths, from, to) when from != to do
     trailing_white_spaces(lengths, from, to - 1) - Enum.at(lengths, to) - 1
   end
 
-  def trailing_white_spaces(_, from, to) when from > to do
-    raise "Something is very wrong"
-  end
 end
 
 Application.ensure_all_started(:memoize)
